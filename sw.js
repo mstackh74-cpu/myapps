@@ -1,9 +1,10 @@
-const CACHE = 'model-train-scale-converter-v1';
+const CACHE = 'model-train-scale-converter-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icon.svg'
+  './icon.svg',
+  './model-train-scale-converter-icon-512.png'
 ];
 
 self.addEventListener('install', event => {
@@ -12,7 +13,11 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(key => key !== CACHE).map(key => caches.delete(key))
+    )).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', event => {
