@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f5f5f4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Scale Converter">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model Train Scale Converter</title>
+<style>
+:root{
+  --bg:#f5f5f4;--panel:#fff;--line:#d2d2d2;--line-dark:#b7b7b7;
+  --text:#161616;--muted:#666;--radius:8px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
+body{padding:26px}
+.app{max-width:1180px;margin:auto}
+h1{font-size:34px;line-height:1.1;margin:0 0 26px;font-weight:700}
+h2{font-size:22px;margin:0 0 16px}
+.section{padding:22px 0;border-top:1px solid #c9c9c9}
+.top-grid{display:grid;grid-template-columns:1.05fr 1.35fr 1fr;gap:18px;align-items:end}
+.field{min-width:0}
+.label{display:block;font-size:13px;font-weight:700;letter-spacing:.02em;margin:0 0 7px}
+.mini{display:block;font-size:11px;font-weight:700;color:#555;margin:0 0 5px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row-scale{display:grid;grid-template-columns:1fr 115px;gap:10px}
+.row-alt{display:grid;grid-template-columns:1fr 128px;gap:10px}
+.control-wrap{position:relative}
+input,select{
+  width:100%;height:44px;border:1px solid var(--line-dark);border-radius:7px;
+  background:#fff;color:var(--text);font:inherit;font-size:16px;padding:0 12px;
+  outline:none;box-shadow:none;
+}
+input:focus,select:focus{border-color:#777;box-shadow:0 0 0 2px rgba(0,0,0,.06)}
+input[type=number]{appearance:textfield;-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+select{
+  -webkit-appearance:none;appearance:none;padding-right:34px;
+  background-image:
+    linear-gradient(45deg,transparent 50%,#333 50%),
+    linear-gradient(135deg,#333 50%,transparent 50%);
+  background-position:
+    calc(100% - 16px) 18px,
+    calc(100% - 11px) 18px;
+  background-size:5px 5px,5px 5px;
+  background-repeat:no-repeat;
+}
+.reference{
+  margin-top:10px;border:1px solid var(--line);border-radius:7px;background:#fafafa;
+  min-height:72px;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:13px 14px;
+  font-size:15px;line-height:1.4
+}
+.reference strong{font-weight:700}
+.subgroup{margin-top:12px;padding-top:11px;border-top:1px solid #ddd}
+.results{display:grid;grid-template-columns:1fr 1.15fr 1.15fr;gap:16px;margin-top:18px}
+.card{
+  background:#fff;border:1px solid var(--line-dark);border-radius:8px;padding:14px 16px;
+  min-height:96px
+}
+.card-title{font-size:12px;font-weight:700;letter-spacing:.025em;margin-bottom:8px}
+.card-value{font-size:30px;line-height:1.05;font-weight:500;word-break:break-word}
+.card-sub{font-size:13px;color:var(--muted);margin-top:7px}
+.note{font-size:13px;color:var(--muted);margin-top:14px}
+.round-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.round-card{border:1px solid var(--line);background:#fafafa;border-radius:7px;padding:11px 13px}
+.round-title{font-size:11px;font-weight:700;color:#555;margin-bottom:5px}
+.round-value{font-size:16px}
+.scale-grid{display:grid;grid-template-columns:1fr 1.15fr 1.15fr;gap:16px;align-items:end}
+.measure-pair{display:grid;grid-template-columns:1fr 125px;gap:10px}
+.full-result{margin-top:16px}
+.convert-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:end}
+.actions{display:flex;gap:10px;margin-top:12px}
+button{
+  height:40px;border:1px solid var(--line-dark);border-radius:7px;background:#fff;
+  color:#111;padding:0 16px;font:inherit;font-size:15px;cursor:pointer
+}
+button:hover{background:#f1f1f1}
+footer{text-align:center;font-size:12px;color:#777;margin-top:10px}
+@media(max-width:850px){
+  body{padding:16px}.top-grid,.results,.scale-grid,.convert-grid{grid-template-columns:1fr}
+  .reference{grid-template-columns:1fr}.card-value{font-size:26px}
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <h1>Model Train Scale Converter</h1>
+
+  <div class="top-grid">
+    <div class="field">
+      <span class="label">SCALE</span>
+      <div class="row-scale">
+        <select id="scalePreset">
+          <option value="22.5">G — 1:22.5</option>
+          <option value="87.1" selected>HO — 1:87.1</option>
+          <option value="22.5">LGB — 1:22.5</option>
+          <option value="160">N — 1:160</option>
+          <option value="48">O (US) — 1:48</option>
+          <option value="64">S — 1:64</option>
+          <option value="220">Z — 1:220</option>
+          <option value="custom">Custom</option>
+        </select>
+        <input id="customScale" type="number" step="any" value="87.1" aria-label="Scale ratio">
+      </div>
+      <div class="reference">
+        <div><strong>1&quot; =</strong> <span id="oneInchEquals"></span></div>
+        <div><strong>1&apos; =</strong> <span id="oneFootEquals"></span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="label">ORIGINAL / PROTOTYPE SIZE</span>
+      <div class="row2">
+        <div><span class="mini">FEET</span><input id="protoFeet" type="number" step="any" value="1"></div>
+        <div><span class="mini">INCHES</span><input id="protoInches" type="number" step="any" value="0"></div>
+      </div>
+      <div class="subgroup">
+        <span class="mini">OR ENTER AS</span>
+        <div class="row-alt">
+          <input id="original" type="number" step="any" placeholder="optional">
+          <select id="originalUnit">
+            <option value="in" selected>inches</option>
+            <option value="ft">decimal feet</option>
+            <option value="mm">mm</option>
+            <option value="cm">cm</option>
+            <option value="m">meters</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="label">OPTIONAL ROUNDING</span>
+      <select id="roundIncrement">
+        <option value="none" selected>Exact only</option>
+        <option value="0.125">to 1/8&quot;</option>
+        <option value="0.0625">to 1/16&quot;</option>
+        <option value="0.03125">to 1/32&quot;</option>
+        <option value="0.015625">to 1/64&quot;</option>
+        <option value="mm1">to 1 mm</option>
+        <option value="mm0.5">to 0.5 mm</option>
+        <option value="mm0.1">to 0.1 mm</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="results">
+    <div class="card"><div class="card-title">SCALE</div><div class="card-value" id="scaleText">1:87.1</div></div>
+    <div class="card"><div class="card-title">EXACT SCALED SIZE IN INCHES</div><div class="card-value" id="inchesOut"></div></div>
+    <div class="card"><div class="card-title">EXACT SCALED SIZE IN MM</div><div class="card-value" id="mmOut"></div></div>
+  </div>
+  <div id="roundArea" style="display:none" class="round-grid">
+    <div class="round-card"><div class="round-title">ROUND DOWN</div><div class="round-value" id="roundDown"></div></div>
+    <div class="round-card"><div class="round-title">NEAREST</div><div class="round-value" id="roundNearest"></div></div>
+    <div class="round-card"><div class="round-title">ROUND UP</div><div class="round-value" id="roundUp"></div></div>
+  </div>
+  <div class="note">The exact decimal result is always preserved. Rounding is displayed separately and never replaces the exact measurement.</div>
+
+  <section class="section">
+    <h2>Scale-to-Scale Converter</h2>
+    <div class="scale-grid">
+      <div class="field">
+        <span class="label">MODEL MEASUREMENT</span>
+        <div class="measure-pair">
+          <input id="stsValue" type="number" step="any" value="1">
+          <select id="stsUnit"><option value="in">inches</option><option value="mm">mm</option><option value="cm">cm</option></select>
+        </div>
+      </div>
+      <div class="field"><span class="label">FROM SCALE</span><select id="fromScale"></select></div>
+      <div class="field"><span class="label">TO SCALE</span><select id="toScale"></select></div>
+    </div>
+    <div class="card full-result">
+      <div class="card-title">EXACT CONVERTED SIZE</div>
+      <div class="card-value" id="stsOut"></div>
+      <div class="card-sub" id="stsOutMm"></div>
+      <div class="card-sub" id="stsExplain"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Inches ↔ Millimeters Converter</h2>
+    <div class="convert-grid">
+      <div class="field"><span class="label">VALUE</span><input id="inchMmInput" type="number" step="any" value="1"></div>
+      <div class="field"><span class="label">CONVERT</span>
+        <select id="inchMmDirection"><option value="inToMm">Inches → Millimeters</option><option value="mmToIn">Millimeters → Inches</option></select>
+      </div>
+    </div>
+    <div class="card full-result">
+      <div class="card-title">EXACT RESULT</div>
+      <div class="card-value" id="inchMmOut"></div>
+    </div>
+    <div class="actions">
+      <button id="swapBtn">↔ Swap</button>
+      <button id="clearBtn">Clear</button>
+    </div>
+  </section>
+  <footer>All results are exact decimal values unless an optional rounding display is selected.</footer>
+</main>
+
+<script>
+(()=>{
+ const $=id=>document.getElementById(id);
+ const mmPer={in:25.4,ft:304.8,mm:1,cm:10,m:1000};
+ const scales=[
+  ['G — 1:22.5','22.5'],['HO — 1:87.1','87.1'],['LGB — 1:22.5','22.5'],
+  ['N — 1:160','160'],['O (US) — 1:48','48'],['S — 1:64','64'],['Z — 1:220','220']
+ ];
+ scales.forEach(([t,v])=>{for(const id of ['fromScale','toScale']){const o=document.createElement('option');o.value=v;o.textContent=t;$(id).appendChild(o)}});
+ $('fromScale').value='87.1'; $('toScale').value='160';
+
+ function exact(n){return Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:10,useGrouping:false}):'—'}
+ function getScale(){const v=$('scalePreset').value==='custom'?Number($('customScale').value):Number($('scalePreset').value);return v>0?v:NaN}
+ function protoFeetIn(totalIn){const ft=Math.floor(totalIn/12),inch=totalIn-ft*12;return `${ft} ft ${exact(inch)} in`}
+ function gcd(a,b){while(b){[a,b]=[b,a%b]}return a}
+ function frac(v,den){let w=Math.floor(v),n=Math.round((v-w)*den);if(n===den){w++;n=0}if(!n)return `${w}"`;const g=gcd(n,den);return `${w?w+' ':''}${n/g}/${den/g}"`}
+ function round(v,inc,mode){const q=v/inc;return (mode==='down'?Math.floor(q+1e-12):mode==='up'?Math.ceil(q-1e-12):Math.round(q))*inc}
+
+ function updateReference(){
+   const s=getScale(); if(!Number.isFinite(s))return;
+   $('oneInchEquals').textContent=`${protoFeetIn(s)} prototype`;
+   $('oneFootEquals').textContent=`${exact(12/s)} in model (${exact(304.8/s)} mm)`;
+ }
+ function updateMain(){
+   if($('scalePreset').value!=='custom')$('customScale').value=$('scalePreset').value;
+   const s=getScale(); $('scaleText').textContent=Number.isFinite(s)?`1:${exact(s)}`:'—'; updateReference();
+   let mm;
+   if($('original').value.trim()!=='') mm=Number($('original').value)*mmPer[$('originalUnit').value];
+   else mm=(Number($('protoFeet').value||0)*12+Number($('protoInches').value||0))*25.4;
+   if(!Number.isFinite(s)||!Number.isFinite(mm))return;
+   const smm=mm/s, sin=smm/25.4;
+   $('inchesOut').textContent=`${exact(sin)} in`; $('mmOut').textContent=`${exact(smm)} mm`;
+   const r=$('roundIncrement').value;
+   if(r==='none'){$('roundArea').style.display='none';return}
+   $('roundArea').style.display='grid';
+   let base,inc,asFrac=false;
+   if(r.startsWith('mm')){base=smm;inc=Number(r.slice(2))}
+   else{base=sin;inc=Number(r);asFrac=true}
+   const render=x=>asFrac?`${frac(x,Math.round(1/inc))} (${exact(x)} in)`:`${exact(x)} mm`;
+   $('roundDown').textContent=render(round(base,inc,'down'));
+   $('roundNearest').textContent=render(round(base,inc,'nearest'));
+   $('roundUp').textContent=render(round(base,inc,'up'));
+ }
+ function updateSTS(){
+   const v=Number($('stsValue').value),f=Number($('fromScale').value),t=Number($('toScale').value),u=$('stsUnit').value;
+   const c=v*f/t; const name=$('stsUnit').options[$('stsUnit').selectedIndex].text;
+   $('stsOut').textContent=`${exact(c)} ${name}`;
+   const mm=u==='in'?c*25.4:u==='cm'?c*10:c;
+   $('stsOutMm').textContent=`${exact(mm)} mm`;
+   $('stsExplain').textContent=`${exact(v)} ${name} at 1:${exact(f)} represents the same prototype size as ${exact(c)} ${name} at 1:${exact(t)}.`;
+ }
+ function updateMM(){
+   const v=Number($('inchMmInput').value),d=$('inchMmDirection').value;
+   $('inchMmOut').textContent=d==='inToMm'?`${exact(v*25.4)} mm`:`${exact(v/25.4)} in`;
+ }
+ $('scalePreset').onchange=updateMain;
+ $('customScale').oninput=()=>{$('scalePreset').value='custom';updateMain()};
+ $('protoFeet').oninput=()=>{$('original').value='';updateMain()};
+ $('protoInches').oninput=()=>{$('original').value='';updateMain()};
+ $('original').oninput=updateMain;$('originalUnit').onchange=updateMain;$('roundIncrement').onchange=updateMain;
+ ['stsValue','stsUnit','fromScale','toScale'].forEach(id=>$(id).addEventListener($(id).tagName==='SELECT'?'change':'input',updateSTS));
+ $('inchMmInput').oninput=updateMM;$('inchMmDirection').onchange=updateMM;
+ $('swapBtn').onclick=()=>{$('inchMmDirection').value=$('inchMmDirection').value==='inToMm'?'mmToIn':'inToMm';updateMM()};
+ $('clearBtn').onclick=()=>{$('inchMmInput').value='';$('inchMmOut').textContent='—'};
+ updateMain();updateSTS();updateMM();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
